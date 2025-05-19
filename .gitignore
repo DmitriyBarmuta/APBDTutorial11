@@ -1,0 +1,37 @@
+## Build results
+bin/
+obj/
+
+## Rider project files
+.idea/
+*.sln.iml
+
+## User-specific files
+*.user
+*.userosscache
+*.suo
+*.sln.docstates
+
+## Logs
+*.log
+
+## OS-generated files
+.DS_Store
+Thumbs.db
+
+## DotNet specific
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+## ASP.NET specific
+wwwroot/
+*.db
+
+## Configuration files
+appsettings.*.local.json
+secrets.json
+
+## Others
+.vscode/
+*.vs/

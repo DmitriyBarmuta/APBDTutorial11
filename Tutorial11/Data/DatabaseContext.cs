@@ -22,6 +22,36 @@ public class DatabaseContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<Patient>().HasKey(p => p.IdPatient);
+        modelBuilder.Entity<Doctor>().HasKey(d => d.IdDoctor);
+        modelBuilder.Entity<Medicament>().HasKey(m => m.IdMedicament);
+        modelBuilder.Entity<Prescription>().HasKey(p => p.IdPrescription);
+        modelBuilder.Entity<PrescriptionMedicament>().HasKey(pm => new { pm.IdMedicament, pm.IdPrescription });
+
+        modelBuilder.Entity<Prescription>()
+            .HasOne(p => p.Patient)
+            .WithMany()
+            .HasForeignKey(p => p.IdPatient)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<Prescription>()
+            .HasOne(p => p.Doctor)
+            .WithMany()
+            .HasForeignKey(p => p.IdDoctor)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<PrescriptionMedicament>()
+            .HasOne(pm => pm.Prescription)
+            .WithMany(p => p.PrescriptionMedicaments)
+            .HasForeignKey(pm => pm.IdPrescription)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<PrescriptionMedicament>()
+            .HasOne(pm => pm.Medicament)
+            .WithMany()
+            .HasForeignKey(pm => pm.IdMedicament)
+            .OnDelete(DeleteBehavior.Cascade);
+
         // Seed Doctors
         modelBuilder.Entity<Doctor>().HasData(
             new Doctor { IdDoctor = 1, FirstName = "John", LastName = "Smith", Email = "john.smith@example.com" },

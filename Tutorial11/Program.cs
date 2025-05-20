@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Tutorial11.Data;
+using Tutorial11.Repositories;
 using Tutorial11.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -11,6 +12,9 @@ builder.Services.AddDbContext<DatabaseContext>(options =>
 );
 
 builder.Services.AddScoped<IPrescriptionService, PrescriptionService>();
+builder.Services.AddScoped<IPrescriptionRepository, PrescriptionRepository>();
+builder.Services.AddScoped<IPatientRepository, PatientRepository>();
+builder.Services.AddScoped<IMedicamentRepository, MedicamentRepository>();
 
 var app = builder.Build();
 

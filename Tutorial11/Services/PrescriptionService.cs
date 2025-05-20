@@ -37,7 +37,6 @@ public class PrescriptionService : IPrescriptionService
             {
                 var newPatient = new Patient
                 {
-                    IdPatient = createPrescriptionDto.Patient.IdPatient,
                     FirstName = createPrescriptionDto.Patient.FirstName,
                     LastName = createPrescriptionDto.Patient.LastName,
                     BirthDate = createPrescriptionDto.Patient.BirthDate,
@@ -53,8 +52,6 @@ public class PrescriptionService : IPrescriptionService
                 IdDoctor = createPrescriptionDto.Doctor.IdDoctor
             };
 
-            var result = await _uow.PrescriptionRepo.CreateNewAsync(newPrescription, cancellationToken);
-
             var prescriptionId = await _uow.PrescriptionRepo.CreateNewAsync(newPrescription, cancellationToken);
 
             foreach (var pm in createPrescriptionDto.Medicaments.Select(m => new PrescriptionMedicament
@@ -68,7 +65,8 @@ public class PrescriptionService : IPrescriptionService
                 await _uow.PrescriptionRepo.AddMedicamentToPrescriptionAsync(pm, cancellationToken);
             }
 
-            return result;
+            await _uow.CommitAsync(cancellationToken);
+            return prescriptionId;
         }
         catch
         {

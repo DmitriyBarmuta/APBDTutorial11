@@ -5,21 +5,24 @@ namespace Tutorial11.Repositories;
 
 public class PrescriptionRepository : IPrescriptionRepository
 {
-    private readonly DatabaseContext _context;
+    private readonly DatabaseContext _dbContext;
 
-    public PrescriptionRepository(DatabaseContext context)
+    public PrescriptionRepository(DatabaseContext dbContext)
     {
-        _context = context;
+        _dbContext = dbContext;
     }
 
 
-    public Task<int> CreateNewAsync(Prescription prescription, CancellationToken cancellationToken)
+    public async Task<int> CreateNewAsync(Prescription prescription, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        await _dbContext.AddAsync(prescription, cancellationToken);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+        return prescription.IdPrescription;
     }
 
-    public Task AddMedicamentToPrescriptionAsync(PrescriptionMedicament pm, CancellationToken cancellationToken)
+    public async Task AddMedicamentToPrescriptionAsync(PrescriptionMedicament prescriptionMedicament, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        await _dbContext.AddAsync(prescriptionMedicament, cancellationToken);
+        await _dbContext.SaveChangesAsync(cancellationToken);
     }
 }

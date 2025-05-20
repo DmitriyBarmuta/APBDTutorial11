@@ -49,7 +49,4 @@ public class UnitOfWork : IUnitOfWork
         await _transaction.DisposeAsync();
         _transaction = null;
     }
-
-    public async Task<int> SaveChangesAsync(CancellationToken cancellationToken) 
-        => await _dbContext.SaveChangesAsync(cancellationToken);
 }

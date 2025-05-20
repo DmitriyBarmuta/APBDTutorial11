@@ -1,72 +1,79 @@
 using Tutorial11.DTOs;
 using Tutorial11.Exceptions;
 using Tutorial11.Models;
-using Tutorial11.Repositories;
 
 namespace Tutorial11.Services;
 
 public class PrescriptionService : IPrescriptionService
 {
-    private readonly IPrescriptionRepository _prescriptionRepository;
-    private readonly IPatientRepository _patientRepository;
-    private readonly IMedicamentRepository _medicamentRepository;
+    private readonly IUnitOfWork _uow;
 
-    public PrescriptionService(IPrescriptionRepository prescriptionRepository,
-        IPatientRepository patientRepository,
-        IMedicamentRepository medicamentRepository)
+    public PrescriptionService(IUnitOfWork uow)
     {
-        _prescriptionRepository = prescriptionRepository;
-        _patientRepository = patientRepository;
-        _medicamentRepository = medicamentRepository;
+        _uow = uow;
     }
-    
-    public async Task<int> CreateNewPrescriptionAsync(CreatePrescriptionDTO createPrescriptionDto, CancellationToken cancellationToken)
+
+    public async Task<int> CreateNewPrescriptionAsync(CreatePrescriptionDTO createPrescriptionDto,
+        CancellationToken cancellationToken)
     {
-        if (createPrescriptionDto.Medicaments.Count > 10)
-            throw new TooMuchMedicationsException("One prescription can store only up to 10 medications.");
-
-        if (createPrescriptionDto.DueDate <= createPrescriptionDto.Date)
-            throw new InvalidPrescriptionDateException("Date of starting of prescription must be before its ending date.");
-
-        var medicamentIds = createPrescriptionDto.Medicaments.Select(medicament => medicament.IdMedicament);
-        if (!await _medicamentRepository.AllExistAsync(medicamentIds, cancellationToken))
-            throw new NoSuchMedicamentException("One or more medicaments were not found.");
-
-        if (!await _patientRepository.ExistsAsync(createPrescriptionDto.Patient.IdPatient, cancellationToken))
+        await _uow.BeginTransactionAsync(cancellationToken);
+        try
         {
-            var newPatient = new Patient
+            if (createPrescriptionDto.Medicaments.Count > 10)
+                throw new TooMuchMedicationsException("One prescription can store only up to 10 medications.");
+
+            if (createPrescriptionDto.DueDate <= createPrescriptionDto.Date)
+                throw new InvalidPrescriptionDateException(
+                    "Date of starting of prescription must be before its ending date.");
+
+            var medicamentIds = createPrescriptionDto.Medicaments.Select(medicament => medicament.IdMedicament);
+            if (!await _uow.MedicamentRepo.AllExistAsync(medicamentIds, cancellationToken))
+                throw new NoSuchMedicamentException("One or more medicaments were not found.");
+
+            if (!await _uow.DoctorRepo.ExistsAsync(createPrescriptionDto.Doctor.IdDoctor, cancellationToken))
+                throw new NoSuchDoctorException("Doctor with provided id doesn't exist.");
+
+            if (!await _uow.PatientRepo.ExistsAsync(createPrescriptionDto.Patient.IdPatient, cancellationToken))
             {
+                var newPatient = new Patient
+                {
+                    IdPatient = createPrescriptionDto.Patient.IdPatient,
+                    FirstName = createPrescriptionDto.Patient.FirstName,
+                    LastName = createPrescriptionDto.Patient.LastName,
+                    BirthDate = createPrescriptionDto.Patient.BirthDate,
+                };
+                await _uow.PatientRepo.CreateNewAsync(newPatient, cancellationToken);
+            }
+
+            var newPrescription = new Prescription
+            {
+                Date = createPrescriptionDto.Date,
+                DueDate = createPrescriptionDto.DueDate,
                 IdPatient = createPrescriptionDto.Patient.IdPatient,
-                FirstName = createPrescriptionDto.Patient.FirstName,
-                LastName = createPrescriptionDto.Patient.LastName,
-                BirthDate = createPrescriptionDto.Patient.BirthDate,
-            }; 
-            await _patientRepository.CreateNewAsync(newPatient, cancellationToken);
+                IdDoctor = createPrescriptionDto.Doctor.IdDoctor
+            };
+
+            var result = await _uow.PrescriptionRepo.CreateNewAsync(newPrescription, cancellationToken);
+
+            var prescriptionId = await _uow.PrescriptionRepo.CreateNewAsync(newPrescription, cancellationToken);
+
+            foreach (var pm in createPrescriptionDto.Medicaments.Select(m => new PrescriptionMedicament
+                     {
+                         IdPrescription = prescriptionId,
+                         IdMedicament = m.IdMedicament,
+                         Dose = m.Dose,
+                         Details = m.Description
+                     }))
+            {
+                await _uow.PrescriptionRepo.AddMedicamentToPrescriptionAsync(pm, cancellationToken);
+            }
+
+            return result;
         }
-
-        var newPrescription = new Prescription
+        catch
         {
-            Date = createPrescriptionDto.Date,
-            DueDate = createPrescriptionDto.DueDate,
-            IdPatient = createPrescriptionDto.Patient.IdPatient,
-            IdDoctor = createPrescriptionDto.Doctor.IdDoctor
-        };
-
-        var result = await _prescriptionRepository.CreateNewAsync(newPrescription, cancellationToken);
-
-        var prescriptionId = await _prescriptionRepository.CreateNewAsync(newPrescription, cancellationToken);
-
-        foreach (var pm in createPrescriptionDto.Medicaments.Select(m => new PrescriptionMedicament
-                 {
-                     IdPrescription = prescriptionId,
-                     IdMedicament = m.IdMedicament,
-                     Dose = m.Dose,
-                     Details = m.Description
-                 }))
-        {
-            await _prescriptionRepository.AddMedicamentToPrescriptionAsync(pm, cancellationToken);
+            await _uow.RollbackAsync(cancellationToken);
+            throw;
         }
-
-        return result;
     }
 }

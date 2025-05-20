@@ -40,6 +40,4 @@ public class PrescriptionController : ControllerBase
             return StatusCode(500, new { error = "Internal Server Error occured.", detail = ex.Message });
         }
     }
-    
-    //TODO: make second endpoint :)
 }

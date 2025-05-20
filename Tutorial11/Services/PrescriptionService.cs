@@ -33,6 +33,8 @@ public class PrescriptionService : IPrescriptionService
             if (!await _uow.DoctorRepo.ExistsAsync(createPrescriptionDto.Doctor.IdDoctor, cancellationToken))
                 throw new NoSuchDoctorException("Doctor with provided id doesn't exist.");
 
+            int patientId;
+
             if (!await _uow.PatientRepo.ExistsAsync(createPrescriptionDto.Patient.IdPatient, cancellationToken))
             {
                 var newPatient = new Patient
@@ -41,29 +43,32 @@ public class PrescriptionService : IPrescriptionService
                     LastName = createPrescriptionDto.Patient.LastName,
                     BirthDate = createPrescriptionDto.Patient.BirthDate,
                 };
-                await _uow.PatientRepo.CreateNewAsync(newPatient, cancellationToken);
+                patientId = await _uow.PatientRepo.CreateNewAsync(newPatient, cancellationToken);
+            }
+            else
+            {
+                patientId = createPrescriptionDto.Patient.IdPatient;
             }
 
             var newPrescription = new Prescription
             {
                 Date = createPrescriptionDto.Date,
                 DueDate = createPrescriptionDto.DueDate,
-                IdPatient = createPrescriptionDto.Patient.IdPatient,
+                IdPatient = patientId,
                 IdDoctor = createPrescriptionDto.Doctor.IdDoctor
             };
 
             var prescriptionId = await _uow.PrescriptionRepo.CreateNewAsync(newPrescription, cancellationToken);
 
-            foreach (var pm in createPrescriptionDto.Medicaments.Select(m => new PrescriptionMedicament
-                     {
-                         IdPrescription = prescriptionId,
-                         IdMedicament = m.IdMedicament,
-                         Dose = m.Dose,
-                         Details = m.Description
-                     }))
+            var prescriptionMedicaments = createPrescriptionDto.Medicaments.Select(m => new PrescriptionMedicament
             {
-                await _uow.PrescriptionRepo.AddMedicamentToPrescriptionAsync(pm, cancellationToken);
-            }
+                IdPrescription = prescriptionId,
+                IdMedicament = m.IdMedicament,
+                Dose = m.Dose,
+                Details = m.Description
+            }).ToList();
+
+            await _uow.PrescriptionRepo.AddManyMedicamentsToPrescriptionAsync(prescriptionMedicaments, cancellationToken);
 
             await _uow.CommitAsync(cancellationToken);
             return prescriptionId;

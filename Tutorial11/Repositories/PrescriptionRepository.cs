@@ -15,14 +15,14 @@ public class PrescriptionRepository : IPrescriptionRepository
 
     public async Task<int> CreateNewAsync(Prescription prescription, CancellationToken cancellationToken)
     {
-        await _dbContext.AddAsync(prescription, cancellationToken);
+        await _dbContext.Prescriptions.AddAsync(prescription, cancellationToken);
         await _dbContext.SaveChangesAsync(cancellationToken);
         return prescription.IdPrescription;
     }
 
-    public async Task AddMedicamentToPrescriptionAsync(PrescriptionMedicament prescriptionMedicament, CancellationToken cancellationToken)
+    public async Task AddManyMedicamentsToPrescriptionAsync(List<PrescriptionMedicament> prescriptionMedicaments, CancellationToken cancellationToken)
     {
-        await _dbContext.AddAsync(prescriptionMedicament, cancellationToken);
+        await _dbContext.PrescriptionMedicaments.AddRangeAsync(prescriptionMedicaments, cancellationToken);
         await _dbContext.SaveChangesAsync(cancellationToken);
     }
 }

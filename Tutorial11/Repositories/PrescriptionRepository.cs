@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Tutorial11.Data;
 using Tutorial11.Models;
 
@@ -24,5 +25,16 @@ public class PrescriptionRepository : IPrescriptionRepository
     {
         await _dbContext.PrescriptionMedicaments.AddRangeAsync(prescriptionMedicaments, cancellationToken);
         await _dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<List<Prescription>> GetAllByPatientIdAsync(int id, CancellationToken cancellationToken)
+    {
+        return await _dbContext.Prescriptions
+            .Where(p => p.IdPatient == id)
+            .Include(p => p.Doctor)
+            .Include(p => p.PrescriptionMedicaments)
+            .ThenInclude(pm => pm.Medicament)
+            .OrderBy(p => p.DueDate)
+            .ToListAsync(cancellationToken);
     }
 }

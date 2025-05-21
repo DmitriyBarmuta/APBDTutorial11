@@ -4,6 +4,18 @@ namespace Tutorial11.Models;
 
 public class Medicament
 {
+    public Medicament()
+    {
+    }
+
+    public Medicament(int idMedicament, string description, string name, string type)
+    {
+        IdMedicament = idMedicament;
+        Description = description;
+        Name = name;
+        Type = type;
+    }
+
     [Key]
     public int IdMedicament { get; set; }
     

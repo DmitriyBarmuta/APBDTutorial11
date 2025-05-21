@@ -25,8 +25,9 @@ public class PatientRepository : IPatientRepository
         return patient.IdPatient;
     }
 
-    public async Task<Patient> GetByIdAsync(int id, CancellationToken cancellationToken)
+    public async Task<Patient?> GetByIdAsync(int id, CancellationToken cancellationToken)
     {
-        return await _dbContext.Patients.Where(p => p.IdPatient == id).FirstAsync(cancellationToken);
+        return await _dbContext.Patients
+            .FirstOrDefaultAsync(p => p.IdPatient == id, cancellationToken);
     }
 }

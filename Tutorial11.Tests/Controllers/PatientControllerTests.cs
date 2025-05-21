@@ -10,18 +10,22 @@ namespace Tutorial11.Tests.Controllers;
 
 public class PatientControllerTests
 {
+    private static PatientController CreatePatientController(out Mock<IPatientService> serviceMock)
+    {
+        serviceMock = new Mock<IPatientService>();
+        return new PatientController(serviceMock.Object);
+    }
+    
     [Fact]
     public async Task GetPatientData_Returns200_EverythingFine()
     {
-        var serviceMock = new Mock<IPatientService>();
-
+        var controller = CreatePatientController(out var serviceMock);
+        
         var patientData = new PatientDataDTO();
         
         serviceMock
             .Setup(s => s.GetPatientData(It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(patientData);
-
-        var controller = new PatientController(serviceMock.Object);
 
         var result = await controller.GetPatientData(1, CancellationToken.None);
 
@@ -32,13 +36,11 @@ public class PatientControllerTests
     [Fact]
     public async Task GetPatientData_Returns400_InvalidPatientId()
     {
-        var serviceMock = new Mock<IPatientService>();
-
+        var controller = CreatePatientController(out var serviceMock);
+        
         serviceMock
             .Setup(s => s.GetPatientData(It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new InvalidPatientIdException("Patient ID must be positive integer."));
-
-        var controller = new PatientController(serviceMock.Object);
 
         var result = await controller.GetPatientData(1, CancellationToken.None);
         
@@ -49,13 +51,11 @@ public class PatientControllerTests
     [Fact]
     public async Task GetPatientData_Returns404_PatientNotFound()
     {
-        var serviceMock = new Mock<IPatientService>();
+        var controller = CreatePatientController(out var serviceMock);
 
         serviceMock
             .Setup(s => s.GetPatientData(It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new NoSuchPatientException("No patient for this ID found."));
-
-        var controller = new PatientController(serviceMock.Object);
 
         var result = await controller.GetPatientData(1, CancellationToken.None);
         
@@ -66,13 +66,11 @@ public class PatientControllerTests
     [Fact]
     public async Task GetPatientData_Returns500_InternalServerError()
     {
-        var serviceMock = new Mock<IPatientService>();
-
+        var controller = CreatePatientController(out var serviceMock);
+        
         serviceMock
             .Setup(s => s.GetPatientData(It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new Exception("Internal server error occured."));
-
-        var controller = new PatientController(serviceMock.Object);
 
         var result = await controller.GetPatientData(1, CancellationToken.None);
         

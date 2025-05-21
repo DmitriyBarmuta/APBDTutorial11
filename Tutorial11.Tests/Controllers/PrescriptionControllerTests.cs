@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.Blazor;
 using Moq;
 using Tutorial11.Controllers;
 using Tutorial11.DTOs;
@@ -18,7 +17,7 @@ public class PrescriptionControllerTests
     }
     
     [Fact]
-    public async Task AddNewPrescription_Returns201_SuccessfullCreation()
+    public async Task AddNewPrescription_Returns201_SuccessfulCreation()
     {
         var controller = CreateMockController(out var serviceMock);
         
@@ -29,7 +28,8 @@ public class PrescriptionControllerTests
         var result = await controller.AddNewPrescription(new CreatePrescriptionDTO(), CancellationToken.None);
 
         var cResult = Assert.IsType<CreatedAtActionResult>(result);
-        Assert.Equal(777, (int)cResult.Value!);
+        var value = Assert.IsType<CreatedResponseDTO>(cResult.Value);
+        Assert.Equal(777, value.Id);
         Assert.Equal(201, cResult.StatusCode);
     }
 

@@ -25,7 +25,7 @@ public class PrescriptionController : ControllerBase
         try
         {
             var id = await _prescriptionService.CreateNewPrescriptionAsync(createPrescriptionDto, cancellationToken);
-            return CreatedAtAction(nameof(AddNewPrescription), new { id }, new { id });
+            return CreatedAtAction(nameof(AddNewPrescription), new { id }, new CreatedResponseDTO{ Id = id });
         }
         catch (Exception ex) when (ex is NoSuchDoctorException or NoSuchMedicamentException)
         {

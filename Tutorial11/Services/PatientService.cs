@@ -14,6 +14,9 @@ public class PatientService : IPatientService
     
     public async Task<PatientDataDTO> GetPatientData(int id, CancellationToken cancellationToken)
     {
+        if (id <= 0)
+            throw new InvalidPatientIdException("Patient ID must be positive integer.");
+        
         if (!await _uow.PatientRepo.ExistsAsync(id, cancellationToken))
             throw new NoSuchPatientException("Patient with given id doesn't exist");
         

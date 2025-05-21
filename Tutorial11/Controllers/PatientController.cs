@@ -16,12 +16,16 @@ public class PatientController : ControllerBase
     }
     
     [HttpGet("{id:int}")]
-    public async Task<IActionResult> getPatientData(int id, CancellationToken cancellationToken)
+    public async Task<IActionResult> GetPatientData(int id, CancellationToken cancellationToken)
     {
         try
         {
             var result = await _patientService.GetPatientData(id, cancellationToken);
             return Ok(result);
+        }
+        catch (InvalidPatientIdException ex)
+        {
+            return BadRequest(new { message = ex.Message });
         }
         catch (NoSuchPatientException ex)
         {
